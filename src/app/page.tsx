@@ -11,13 +11,6 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight">MintLockr</h1>
           <p className="mt-2 text-lg text-muted-foreground">Mint your unique digital assets on the blockchain.</p>
         </header>
-        <div className="bg-yellow-500/10 text-yellow-200 border border-yellow-500/20 rounded-lg p-4 text-sm mb-6">
-          <strong>Note:</strong> The AI features require a Google AI API key. Please get one from{' '}
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-100">
-            Google AI Studio
-          </a>{' '}
-          and add it to the `.env.local` file in your project.
-        </div>
         <MintNftCard />
       </div>
     </main>
