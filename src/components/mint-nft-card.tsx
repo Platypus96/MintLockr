@@ -111,18 +111,33 @@ export function MintNftCard() {
       await provider.send('eth_requestAccounts', []);
       const signer = await provider.getSigner();
 
-      // This is a simulated transaction as we don't have a real contract deployment
-      // and IPFS upload step. In a real app, you would upload metadata to IPFS first.
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      // const contract = new ethers.Contract(MINTLOCKR_CONTRACT_ADDRESS, MINTLOCKR_ABI, signer);
-      // const tx = await contract.safeMint(account, 'ipfs://your-metadata-hash');
-      // await tx.wait();
+      // In a real app, you would upload the image and metadata to a decentralized
+      // storage service like IPFS and get a metadata URI.
+      // For this example, we'll use a placeholder URI.
+      const metadataUri = 'ipfs://bafkreiem4qwt4hmv3b2z3t36sdk4xquxv564ygrfy3yvj7i2s72s6q43om';
 
-      const fakeTxHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-      const fakeTokenId = Math.floor(Math.random() * 100000).toString();
+      const contract = new ethers.Contract(MINTLOCKR_CONTRACT_ADDRESS, MINTLOCKR_ABI, signer);
+      
+      const tx = await contract.safeMint(account, metadataUri);
+      const receipt = await tx.wait();
 
-      setTxHash(fakeTxHash);
-      setTokenId(fakeTokenId);
+      let mintedTokenId = null;
+      if (receipt.logs) {
+        for (const log of receipt.logs) {
+            try {
+                const parsedLog = contract.interface.parseLog(log);
+                if (parsedLog && parsedLog.name === "Transfer") {
+                    mintedTokenId = parsedLog.args.tokenId.toString();
+                    break;
+                }
+            } catch (error) {
+                // This log might not be from your contract, ignore it
+            }
+        }
+      }
+
+      setTxHash(tx.hash);
+      setTokenId(mintedTokenId);
       setNftAddress(MINTLOCKR_CONTRACT_ADDRESS);
       setStatus('success');
       toast({
@@ -130,6 +145,7 @@ export function MintNftCard() {
         description: 'Your new digital asset is now on the blockchain.',
       });
     } catch (error: any) {
+      console.error(error);
       toast({
         variant: 'destructive',
         title: 'Minting Failed',
@@ -236,7 +252,7 @@ export function MintNftCard() {
             {status === 'enhancing' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Enhance with AI
           </Button>
-          <Button onClick={handleMint} disabled={isWorking} className="w-full sm:w-auto flex-grow bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button onClick={handleMint} disabled={isWorking || status === 'success'} className="w-full sm:w-auto flex-grow bg-accent hover:bg-accent/90 text-accent-foreground">
             {status === 'minting' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Mint NFT
           </Button>
