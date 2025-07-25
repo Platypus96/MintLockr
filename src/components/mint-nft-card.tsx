@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Copy,
   ExternalLink,
+  Bot,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -22,16 +23,20 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MINTLOCKR_CONTRACT_ADDRESS, MINTLOCKR_ABI } from '@/lib/contracts';
 import { enhanceImage } from '@/ai/flows/enhance-image-quality';
+import { generateNftDescription } from '@/ai/flows/generate-nft-description';
 
-type Status = 'idle' | 'connecting' | 'enhancing' | 'minting' | 'success';
+type Status = 'idle' | 'connecting' | 'enhancing' | 'generating-desc' | 'minting' | 'success';
 
 export function MintNftCard() {
   const [account, setAccount] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
+  const [description, setDescription] = useState<string>('');
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
   const [tokenId, setTokenId] = useState<string | null>(null);
@@ -40,7 +45,7 @@ export function MintNftCard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const isWorking = status === 'connecting' || status === 'enhancing' || status === 'minting';
+  const isWorking = status === 'connecting' || status === 'enhancing' || status === 'generating-desc' || status === 'minting';
 
   const handleConnectWallet = async () => {
     if (typeof window.ethereum === 'undefined') {
@@ -77,6 +82,7 @@ export function MintNftCard() {
       reader.onloadend = () => {
         setImage(reader.result as string);
         setEnhancedImage(null);
+        setDescription('');
         setStatus('idle');
         setTxHash(null);
         setTokenId(null);
@@ -102,6 +108,27 @@ export function MintNftCard() {
       setStatus('idle');
     }
   };
+  
+  const handleGenerateDescription = async () => {
+    if (!image) return;
+    setStatus('generating-desc');
+    try {
+      const result = await generateNftDescription({ photoDataUri: enhancedImage || image });
+      setDescription(result.description);
+       toast({
+        title: 'Description Generated!',
+        description: 'The AI has crafted a description for your NFT.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Description Generation Failed',
+        description: error.message || 'There was an issue generating the description.',
+      });
+    } finally {
+      setStatus('idle');
+    }
+  }
 
   const handleMint = async () => {
     if (!image || !account) return;
@@ -114,6 +141,7 @@ export function MintNftCard() {
       // In a real app, you would upload the image and metadata to a decentralized
       // storage service like IPFS and get a metadata URI.
       // For this example, we'll use a placeholder URI.
+      // The metadata would include the `description` state.
       const metadataUri = 'ipfs://bafkreiem4qwt4hmv3b2z3t36sdk4xquxv564ygrfy3yvj7i2s72s6q43om';
 
       const contract = new ethers.Contract(MINTLOCKR_CONTRACT_ADDRESS, MINTLOCKR_ABI, signer);
@@ -214,6 +242,27 @@ export function MintNftCard() {
                     </div>
                 )}
             </div>
+            
+            {image && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                   <Label htmlFor="description">NFT Description</Label>
+                   <Button onClick={handleGenerateDescription} disabled={isWorking} size="sm" variant="ghost" className="text-accent hover:text-accent/90">
+                     {status === 'generating-desc' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
+                     Generate with AI
+                   </Button>
+                </div>
+                <Textarea 
+                  id="description"
+                  placeholder="A creative description for your new NFT..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={isWorking}
+                  rows={3}
+                  />
+              </div>
+            )}
+
 
             {status === 'success' && txHash && tokenId && nftAddress ? (
               <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 space-y-4 animate-in fade-in-50">
