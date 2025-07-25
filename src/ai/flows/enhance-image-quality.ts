@@ -51,7 +51,7 @@ const enhanceImageFlow = ai.defineFlow(
         {text: 'Subtly enhance the quality of this image, improving resolution, lighting, and color balance without drastically changing the content or style.'},
       ],
       config: {
-        responseModalities: ['IMAGE'],
+        responseModalities: ['TEXT', 'IMAGE'],
       },
     });
 
