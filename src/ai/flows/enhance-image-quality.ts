@@ -37,38 +37,6 @@ export async function enhanceImage(input: EnhanceImageInput): Promise<EnhanceIma
   return enhanceImageFlow(input);
 }
 
-const enhanceImagePrompt = ai.definePrompt({
-  name: 'enhanceImagePrompt',
-  input: {schema: EnhanceImageInputSchema},
-  output: {schema: EnhanceImageOutputSchema},
-  prompt: `You are an AI image enhancer. You will enhance the quality of the image provided.
-
-  The enhanced image must retain the same subject matter as the original photo.
-
-  Photo: {{media url=photoDataUri}}
-  `, // noqa: max-line-length
-  config: {
-    safetySettings: [
-      {
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_ONLY_HIGH',
-      },
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_LOW_AND_ABOVE',
-      },
-    ],
-  },
-});
-
 const enhanceImageFlow = ai.defineFlow(
   {
     name: 'enhanceImageFlow',
@@ -80,13 +48,17 @@ const enhanceImageFlow = ai.defineFlow(
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: [
         {media: {url: input.photoDataUri}},
-        {text: 'Enhance the quality of this image.'},
+        {text: 'Subtly enhance the quality of this image, improving resolution, lighting, and color balance without drastically changing the content or style.'},
       ],
       config: {
-        responseModalities: ['TEXT', 'IMAGE'],
+        responseModalities: ['IMAGE'],
       },
     });
 
-    return {enhancedPhotoDataUri: media!.url!};
+    if (!media?.url) {
+      throw new Error('Image enhancement failed to return a valid image.');
+    }
+
+    return {enhancedPhotoDataUri: media.url};
   }
 );
