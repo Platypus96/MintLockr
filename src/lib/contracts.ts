@@ -2,7 +2,7 @@
 // In a real-world application, you would replace these with your deployed contract's details.
 
 // A dummy ERC-721 contract address on the Sepolia testnet.
-export const MINTLOCKR_CONTRACT_ADDRESS = '0x09AEa93022145C835A475F255447C1f2A5703243';
+export const MINTLOCKR_CONTRACT_ADDRESS = '0x09aea93022145c835a475f255447c1f2a5703243';
 
 // A minimal Application Binary Interface (ABI) for an ERC-721 minting function.
 export const MINTLOCKR_ABI = [
