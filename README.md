@@ -2,6 +2,32 @@
 
 This is a Next.js application that allows users to connect their Ethereum wallet (like MetaMask) and mint an NFT on the Sepolia testnet.
 
+## Project Workflow
+
+Here’s a step-by-step breakdown of how the application functions:
+
+1.  **Page Load & UI Rendering**:
+    *   The app starts by rendering `src/app/page.tsx`, which displays the main UI.
+    *   The core interactive element is the `<MintNftCard />` component, built with Next.js, React, and ShadCN UI components.
+
+2.  **Connect Wallet**:
+    *   The user clicks the "Connect Wallet" button.
+    *   The `handleConnectWallet` function in `mint-nft-card.tsx` uses `window.ethereum.request({ method: 'eth_requestAccounts' })` to connect to the user's MetaMask wallet.
+    *   Once connected, the user's wallet address is stored in the component's state, and the UI updates to show the connected status.
+
+3.  **Provide NFT Details**:
+    *   The user uploads an image file from their computer. The `handleFileChange` function uses the browser's `FileReader` API to display a preview.
+    *   The user enters a name and description for the NFT, which are stored in the component's state.
+
+4.  **Mint the NFT**:
+    *   The user clicks "Mint Your NFT." This triggers the `handleMint` function.
+    *   **Ethers.js Interaction**: The app uses the `ethers` library to communicate with the Ethereum blockchain via the user's wallet provider.
+    *   **Smart Contract Call**: A new instance of the smart contract is created using its on-chain address (`MINTLOCKR_CONTRACT_ADDRESS`) and ABI (`MINTLOCKR_ABI`).
+    *   **Metadata Note**: In this demo, the image is not uploaded. A placeholder metadata URI is passed to the smart contract. In a production app, the image and metadata would be uploaded to a service like IPFS first.
+    *   **Transaction**: The `contract.safeMint()` function is called, prompting the user to confirm the transaction in MetaMask.
+    *   **Confirmation**: The app waits for the transaction to be mined and confirmed on the Sepolia testnet.
+    *   **Success UI**: After confirmation, the app parses the transaction logs to get the new `tokenId` and updates the UI to show a success message with the transaction details.
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your computer:
